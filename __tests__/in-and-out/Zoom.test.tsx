@@ -1,0 +1,27 @@
+/*
+ * Zoom Component Test Suite
+ *
+ * Copyright © Roman Nosov 2017
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.txt file in the root directory of this source tree.
+ */
+import Zoom from '../../src/in-and-out/Zoom';
+
+import React from 'react';
+import { shallow } from 'enzyme';
+import { configure } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+configure({ adapter: new Adapter() });
+
+describe('Zoom', () => {
+  it('renders a initial view', () => {
+    const content = shallow(
+      <Zoom bottom right>
+        <div>Test test</div>
+      </Zoom>
+    );
+    expect(content.html()).toMatchSnapshot();
+  });
+});

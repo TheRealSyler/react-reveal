@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "CommonJS",
+    "jsx": "react",
+    "declaration": true,
+    "strict": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "exclude": ["./jest.config.ts", "__tests__/**"]
+}
