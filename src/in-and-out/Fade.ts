@@ -10,23 +10,14 @@
 import { animation, defaults } from '../lib/globals';
 import wrap from '../lib/wrap';
 import { FunctionComponent } from 'react';
-import { Lookup, Make, Effect } from '../utils';
+import { Lookup, Make, Effect, DirectionProps, BaseProps } from '../utils';
 
-interface FadeProps {
+interface FadeProps extends DirectionProps, BaseProps {
   out: boolean;
-  left: boolean;
-  right: boolean;
-  top: boolean;
-  bottom: boolean;
   big: boolean;
   mirror: boolean;
   opposite: boolean;
-  duration: number;
-  timeout: number;
   distance: string;
-  delay: number;
-  count: number;
-  forever: boolean;
 }
 
 const lookup: Lookup = {};
@@ -51,8 +42,8 @@ const make: Make = (
   const transform = left || right || up || down || top || bottom;
   let x, y;
   if (transform) {
+    // Boolean XOR
     if (!mirror !== !(reverse && opposite))
-      // Boolean XOR
       [left, right, top, bottom, up, down] = [right, left, bottom, top, down, up];
     const dist = distance || (big ? '2000px' : '100%');
     x = left ? '-' + dist : right ? dist : '0';
@@ -89,7 +80,7 @@ const Fade: FunctionComponent<Partial<FadeProps>> = (
     style: { animationFillMode: 'both' },
     reverse: props.left,
   };
-  return (context ? wrap(props, effect, effect, children) : effect) as any; // TODO add better types
+  return (context ? wrap(props as any, effect, effect, children) : effect) as any; // TODO add better types
 };
 
 export default Fade;

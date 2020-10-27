@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES5",
+    "target": "ES6",
     "module": "CommonJS",
     "jsx": "react",
     "declaration": true,
@@ -11,5 +11,6 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
+  "include": ["src"],
   "exclude": ["./jest.config.ts", "__tests__/**"]
 }

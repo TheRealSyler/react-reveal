@@ -1,6 +1,6 @@
 import { CSSProperties, FunctionComponent } from 'react';
 
-interface MakeArgs {
+export interface MakeArgs {
   duration: number;
   delay: number;
   count: number;
@@ -19,7 +19,7 @@ interface MakeArgs {
   opposite: boolean;
 }
 
-export type Make = (reverse: boolean, args: MakeArgs) => string;
+export type Make = (reverse: boolean, args: Partial<MakeArgs>) => string;
 
 export interface Effect {
   make: Make;
@@ -33,7 +33,21 @@ export interface Effect {
 
 export type Lookup = { [key: number]: string };
 
-interface SimpleProps {
+export interface DirectionProps {
+  left?: boolean;
+  right?: boolean;
+  top?: boolean;
+  bottom?: boolean;
+}
+
+/**
+ * @duration: number;
+ * @timeout: number;
+ * @delay: number;
+ * @count: number;
+ * @forever: boolean;
+ */
+export interface BaseProps {
   duration: number;
   timeout: number;
   delay: number;
@@ -41,4 +55,4 @@ interface SimpleProps {
   forever: boolean;
 }
 
-export type SimpleComponent = FunctionComponent<Partial<SimpleProps>>;
+export type SimpleComponent = FunctionComponent<Partial<BaseProps>>;

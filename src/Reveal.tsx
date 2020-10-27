@@ -11,23 +11,19 @@ import { defaults } from './lib/globals';
 import wrap from './lib/wrap';
 import Fade from './in-and-out/Fade';
 import { FunctionComponent } from 'react';
+import { BaseProps, Effect } from './utils';
 
-interface RevealProps {
+interface RevealProps extends BaseProps {
   in: {}; // TODO Add better types
   out: {} | [false]; // TODO Add better types
   effect: string;
   effectOut: string;
-  duration: number;
-  timeout: number;
-  delay: number;
-  count: number;
-  forever: boolean;
   durationOut: number;
   delayOut: number;
   countOut: number;
   foreverOut: boolean;
-  inEffect: any; // TODO Add better types
-  outEffect: any; // TODO Add better types
+  inEffect: Effect;
+  outEffect: Effect;
 }
 
 const defaultProps = {
@@ -36,8 +32,8 @@ const defaultProps = {
   delayOut: defaults.delay,
   countOut: defaults.count,
   foreverOut: defaults.forever,
-  inEffect: Fade(defaults),
-  outEffect: Fade({ out: true, ...defaults }),
+  inEffect: (Fade(defaults) as any) as Effect,
+  outEffect: (Fade({ out: true, ...defaults }) as any) as Effect,
 };
 
 const Reveal: FunctionComponent<Partial<RevealProps>> = ({
@@ -80,8 +76,8 @@ const Reveal: FunctionComponent<Partial<RevealProps>> = ({
         }
       : inEffect;
   }
-
-  return wrap(props, factory(false), factory(true), children);
+  // TODO remove type assertions
+  return wrap(props as any, factory(false) as any, factory(true) as any, children);
 };
 
 Reveal.defaultProps = defaultProps;

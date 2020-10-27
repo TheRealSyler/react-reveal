@@ -7,7 +7,7 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
-import React, { CSSProperties } from 'react';
+import React, { CSSProperties, Component } from 'react';
 import {
   namespace,
   ssr,
@@ -20,8 +20,7 @@ import {
   observerMode,
   raf,
 } from './lib/globals';
-import { MakeArgs } from '../dist/in-and-out/Fade';
-import { Effect } from './utils';
+import { Effect, MakeArgs } from './utils';
 //import Step from './lib/Step';
 //import throttle from './lib/throttle';
 
@@ -77,12 +76,20 @@ interface RevealBaseProps extends Partial<MakeArgs> {
   ssrReveal?: boolean;
   collapseOnly?: boolean;
   ssrFadeout?: boolean;
-  when?: boolean; // TODO Add better types
+  style?: Style;
+  className?: string;
+  when?: boolean;
 }
+
+type Style = Partial<
+  CSSProperties & {
+    animationName: string | InOut['make'];
+  }
+>;
 
 interface RevealBaseState {
   collapse?: Partial<CSSProperties>;
-  style: Partial<CSSProperties & { animationName: string | InOut['make'] }>;
+  style: Style;
   hasExited?: boolean;
   hasAppeared?: boolean;
   className?: string;
@@ -99,10 +106,72 @@ interface ChildElement {
   type: string;
   key: string | null;
   ref: () => void | null;
-  props: { children: null | ChildElement; [key: string]: any };
+  props: { children: null | ChildElement } & Partial<RevealBaseProps>;
 }
 
-class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
+interface Props extends Partial<MakeArgs> {
+  inEffect: Effect;
+  outEffect: Effect | false; //? TODO Add better types
+}
+
+interface State {
+  style: Style;
+}
+
+class RevealBase extends Component<Props, State> {
+  constructor(props: Props, context: any) {
+    super(props, context);
+    this.state = {
+      style: {
+        animationName: props.inEffect.make(false, props),
+        ...this.props.inEffect.style,
+        animationDuration: `${this.props.inEffect.duration}ms`,
+        animationDelay: `${this.props.inEffect.delay}ms`,
+        animationIterationCount: this.props.inEffect.forever
+          ? 'infinite'
+          : this.props.inEffect.count,
+        opacity: 0,
+      },
+    };
+  }
+
+  getChild() {
+    if (typeof this.props.children === 'object') {
+      const child = React.Children.only(this.props.children)!;
+
+      if ('type' in child && typeof child.type === 'string') {
+        return child;
+      } else {
+        return <div>{child}</div>;
+      }
+    } else return <div>{this.props.children}</div>;
+  }
+
+  render() {
+    const child = this.getChild();
+
+    return <child.type style={this.state.style}>{child.props.children}</child.type>;
+  }
+}
+
+class a {
+  static getInitialCollapseStyle(props: RevealBaseProps): Partial<CSSProperties> {
+    return {
+      height: 0,
+      visibility: props.when ? void 0 : 'hidden',
+    };
+  }
+
+  static getTop(el: any): number {
+    while (el.offsetTop === void 0) el = el.parentNode;
+    let top = el.offsetTop;
+    for (; el.offsetParent; top += el.offsetTop) el = el.offsetParent;
+    return top;
+  }
+}
+
+// @ts-ignore
+class RevealBaseOld extends Component<RevealBaseProps, RevealBaseState> {
   //getChildContext() {
   //  return { transitionGroup: null }; // allows for nested Transitions
   //}
@@ -122,10 +191,12 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
 
   constructor(props: RevealBaseProps, context: RevealBaseContext) {
     super(props, context);
+
+    console.log('CONSTRUCTOR');
     this.isOn = props.when !== undefined ? !!props.when : true;
     this.state = {
       collapse: props.collapse //&& (props.appear || (context.transitionGroup&&!context.transitionGroup.isMounting))
-        ? RevealBase.getInitialCollapseStyle(props)
+        ? a.getInitialCollapseStyle(props)
         : void 0,
       style: {
         opacity: (!this.isOn || props.ssrReveal) && props.outEffect ? 0 : void 0,
@@ -338,6 +409,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
   }
 
   componentDidMount() {
+    console.log('DID MOUNT');
     if (!this.el || this.props.disabled) return;
     if (!this.props.collapseOnly) {
       if ('make' in this.props.inEffect) this.props.inEffect.make(false, this.props as any); // TODO remove type assertion
@@ -357,7 +429,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
           !this.props.ssrFadeout &&
           this.props.outEffect &&
           !this.props.ssrReveal &&
-          RevealBase.getTop(this.el) < window.pageYOffset + window.innerHeight))
+          a.getTop(this.el) < window.pageYOffset + window.innerHeight))
     ) {
       this.isShown = true;
       this.setState({
@@ -372,7 +444,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
       ssr &&
       (fadeOutEnabled || this.props.ssrFadeout) &&
       this.props.outEffect &&
-      RevealBase.getTop(this.el) < window.pageYOffset + window.innerHeight
+      a.getTop(this.el) < window.pageYOffset + window.innerHeight
     ) {
       this.setState({ style: { opacity: 0, transition: 'opacity 1000ms 1000ms' } });
       window.setTimeout(() => this.reveal(this.props, true), 2000);
@@ -385,6 +457,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
   }
 
   cascade(children: string | ChildElement) {
+    console.log('CASCADE');
     let newChildren;
     if (typeof children === 'string') {
       newChildren = children.split('').map((ch, index) => (
@@ -435,7 +508,8 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
     };
   }
 
-  componentWillReceiveProps(props: RevealBaseProps) {
+  componentDidUpdate(props: RevealBaseProps) {
+    console.log('componentDidUpdate');
     if (props.when !== undefined) this.isOn = !!props.when;
     if (props.fraction !== this.props.fraction) this.observe(props, true);
     if (!this.isOn && props.onExited && 'exit' in props && props.exit === false) {
@@ -444,7 +518,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
     }
     if (props.disabled) return;
     if (props.collapse && !this.props.collapse) {
-      this.setState({ style: {}, collapse: RevealBase.getInitialCollapseStyle(props) });
+      this.setState({ style: {}, collapse: a.getInitialCollapseStyle(props) });
       this.isShown = false;
     }
     if (props.when !== this.props.when || props.spy !== this.props.spy) this.reveal(props);
@@ -466,6 +540,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
   }
 
   render() {
+    console.log('RENDER');
     let mount;
     if (!this.state.hasAppeared) mount = !this.props.mountOnEnter || this.isOn;
     else mount = !this.props.unmountOnExit || !this.state.hasExited || this.isOn;
@@ -492,12 +567,14 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
       newChildren = this.cascade(children);
       newStyle = { ...style, opacity: 1 };
     } else newStyle = this.props.disabled ? style : { ...style, ...this.state.style };
-    const props = {
+
+    const props: Partial<RevealBaseProps> = {
       ...this.props.props,
       className: newClass,
       style: newStyle,
-      [this.props.refProp!]: this.saveRef, // TODO remove not null assertion
+      [this.props.refProp || 'ref']: this.saveRef,
     };
+
     //if (this.props.collapse && !this.props.disabled)
     //  props.key = 1;
     const el = React.cloneElement(child, props, mount ? newChildren || children : undefined);
@@ -543,7 +620,7 @@ class RevealBase extends React.Component<RevealBaseProps, RevealBaseState> {
   inViewport(props: RevealBaseProps) {
     if (!this.el || window.document.hidden) return false;
     const h = this.el.offsetHeight,
-      delta = window.pageYOffset /* - props.margin */ - RevealBase.getTop(this.el),
+      delta = window.pageYOffset /* - props.margin */ - a.getTop(this.el),
       tail = Math.min(h, window.innerHeight) * (globalHide ? props.fraction! : 0); // TODO remove not null assertion
     return delta > tail - window.innerHeight && delta < h - tail;
   }

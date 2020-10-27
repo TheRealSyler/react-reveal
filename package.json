@@ -44,10 +44,11 @@
     "typescript": "^3.9.7"
   },
   "scripts": {
+    "prepack": "yarn test",
+    "build:watch": "tsc -w --incremental",
     "build": "del ./dist && tsc -b",
     "gen:test:config": "ts-node ./jest.config.ts",
     "test": "yarn gen:test:config && jest --config jest.config.json",
-    "test:watch": "yarn gen:test:config && jest --watch --config jest.config.json",
-    "clean": "./node_modules/gulp/bin/gulp.js clean"
+    "test:watch": "yarn gen:test:config && jest --watch --config jest.config.json"
   }
 }

@@ -11,21 +11,12 @@
 import wrap from '../lib/wrap';
 import { animation, defaults } from '../lib/globals';
 import { FunctionComponent } from 'react';
-import { Make, Lookup, Effect } from '../utils';
+import { Make, Lookup, Effect, DirectionProps, BaseProps } from '../utils';
 
-interface BounceProps {
+interface BounceProps extends DirectionProps, BaseProps {
   out: boolean;
-  left: boolean;
-  right: boolean;
-  top: boolean;
-  bottom: boolean;
   mirror: boolean;
   opposite: boolean;
-  duration: number;
-  timeout: number;
-  delay: number;
-  count: number;
-  forever: boolean;
 }
 
 const lookup: Lookup = {};
